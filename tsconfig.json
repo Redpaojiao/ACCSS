@@ -1,7 +1,7 @@
 {
     "compileOnSave": true,
-    "sourceMap": true,
     "compilerOptions": {
+        "sourceMap": true,
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "jsx": "react",
