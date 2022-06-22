@@ -2,13 +2,21 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import * as fs from 'fs'
 import * as ps from 'child_process'
+import * as nipplejs from 'nipplejs'
 import { MapShow } from './MapShow'
 import { EchartShowSys } from './EchartsShow'
 import { NetServerMain } from './SocketComu'
+import { ResizeObserver } from 'resize-observer'
+import '../Common/FlyingMonitor.css'
+import '../Common/DroneStatus.css'
+import '../Common/DroneSettings.css'
+import NoSignal from '../Common/IMG/no-signal.jpg'
 
 export module MainPageUI {
     let JSONConfig: any;
     let server: NetServerMain;
+    let deviceSelected: number = 0;
+    let deviceList: Array<number>
     export function MainPageSet(): void {
         JSONConfig = JSON.parse(String(fs.readFileSync('ACCSSConfig.json')));
         console.log(JSONConfig.nodeServerIP);
@@ -74,6 +82,8 @@ export module MainPageUI {
                 this.setState({ RenaderID: 3 })
             }
         }
+        private ExpandAll(): void {
+        }
 
         public render() {
             if (this.state.RenaderID == 0) {
@@ -115,6 +125,12 @@ export module MainPageUI {
                                         <span id="AdvanceSetting">AdvanceSetting</span>
                                     </a>
                                 </li>
+                                <li style={{ position: "absolute", bottom: 0 }}>
+                                    <a href="#" onClick={this.ExpandAll}>
+                                        <i id="exp" className="fa fa-window-restore" aria-hidden="true"></i>
+                                        <span id="ExpandAll">ExpandORClose</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -130,29 +146,30 @@ export module MainPageUI {
 
     interface footTileState {
         DeviceCount: number;
+        deviceSelected: number;
         deviceListIsShow: boolean;
     }
 
     class FootTitle extends React.Component<footTitleProps, footTileState> {
         timerID: NodeJS.Timeout;
-        deviceList: Array<number>;
         deviceListElement: Array<JSX.Element> = new Array<JSX.Element>();
         constructor(props) {
             super(props);
-            this.state = { DeviceCount: 0, deviceListIsShow: false }
+            this.state = { DeviceCount: 0, deviceSelected: null, deviceListIsShow: false }
             this.showDeviceList = this.showDeviceList.bind(this);
+            this.deviceSelect = this.deviceSelect.bind(this);
         }
 
         componentDidMount() {
             this.timerID = setInterval(() => {
                 this.setState({ DeviceCount: server.getUseableID().length });
                 this.deviceListElement = Array<JSX.Element>();
-                this.deviceList = server.getUseableID();
-                for (let index = 0; index < this.deviceList.length; index++) {
+                deviceList = server.getUseableID();
+                for (let index = 0; index < deviceList.length; index++) {
                     this.deviceListElement.push(
                         <li key={index.toString()}>
-                            <a href="#">
-                                <div id="deviceId">DeviceID:  {this.deviceList[index]}<br />
+                            <a href="#" onClick={() => this.deviceSelect(deviceList[index])}>
+                                <div id="deviceId">DeviceID:  {deviceList[index]}<br />
                                     <div id="deviceType">[Unkown]</div>
                                     <i className="fa fa-battery-half" aria-hidden="true"></i>
                                 </div>
@@ -161,6 +178,11 @@ export module MainPageUI {
                     );
                 }
             }, 1000)
+        }
+
+        deviceSelect(device: number) {
+            this.setState({ deviceSelected: device });
+            deviceSelected = this.state.deviceSelected;
         }
 
         showDeviceList() {
@@ -188,7 +210,7 @@ export module MainPageUI {
                                 </ul>
                             </div>
                         </div>
-                        <a href="#" id="footName"> ACCSS by TSKangetsu </a>
+                        <a href="#" id="footName"> ACCSS毕业设计 by 廖舒灏 </a>
                         <a href="#" id="footVersion"> Version  0.0.1-Beta </a>
                         <a href="#" onClick={this.showDeviceList} id="footDevice">Connected Device:{this.state.DeviceCount}</a>
                     </div>
@@ -198,13 +220,17 @@ export module MainPageUI {
     }
 
     //=================================================================================================================================//
-
     class FlyingMonitorComponent extends React.Component {
         public render() {
             return (
                 <>
-                    <Map />
-                    <GLRTShow />
+                    <div id="MapVideoArea">
+                        <Map />
+                        <VideoShowArea />
+                    </div>
+                    <div id="InfoControllArea">
+                        <RCControllerStick />
+                    </div>
                 </>
             );
         }
@@ -215,66 +241,197 @@ export module MainPageUI {
             return (
                 <>
                     <SensorRTChart />
-                    <CVShowArea />
                 </>
             );
         }
     }
+    //=================================================================================================================================//
+    interface droneSettingsProp {
 
-    class DroneSettingsComponent extends React.Component {
+    }
+
+    interface droneSettingsState {
+
+    }
+
+    class DroneSettingsComponent extends React.Component<droneSettingsProp, droneSettingsState> {
+        constructor(props) {
+            super(props);
+            this.mixerSelect = this.mixerSelect.bind(this);
+        }
+
+        private mixerSelect(event: React.ChangeEvent<HTMLSelectElement>) {
+            if (event.target.value == "Quad X") {
+            } else if (event.target.value == "Octo Flat X") {
+            }
+        }
+
         public render() {
             return (
                 <>
-                    <div id="controllertypepanel"></div>
+                    <div id="SettingMainL">
+                        <div id="controllerType">
+                            <div style={{ marginTop: "-25px", marginLeft: "10px" }}>MixerType 混控类型</div>
+                            <div id="mixerIMG"></div>
+                            <select name="mixerType" id="mixerType" onChange={this.mixerSelect}>
+                                <option value="Quad X">Quad X</option>
+                                <option value="Octo Flat X">Octo Flat X</option>
+                            </select>
+                        </div>
+
+                        <div id="systemSettings">
+                            <div style={{ marginTop: "-25px", marginLeft: "10px" }}>SystemSettings</div>
+                            <div id="freqSetting">
+                                <select name="freqSelected" id="freqSelect">
+                                    <option value="4KHZ">4KHZ</option>
+                                    <option value="2KHZ">2KHZ</option>
+                                    <option value="2KHZ">1KHZ</option>
+                                    <option value="500HZ">500HZ</option>
+                                    <option value="250HZ">250HZ</option>
+                                </select>
+                                <div style={{ display: "inline-block", marginLeft: "15px" }}>Gyro Update Freqeuncy 陀螺仪</div>
+                            </div>
+                            <div id="freqSetting">
+                                <label className="switch" form="txt">
+                                    <input type="checkbox"></input>
+                                    <span className="slider round"></span>
+                                </label>
+                                <div style={{ display: "inline-block", marginLeft: "15px" }}>Barometer 气压计</div>
+                            </div>
+                            <div id="freqSetting">
+                                <label className="switch" form="txt">
+                                    <input type="checkbox"></input>
+                                    <span className="slider round"></span>
+                                </label>
+                                <div style={{ display: "inline-block", marginLeft: "15px" }}>GPS 定位</div>
+                            </div>
+                            <div id="freqSetting">
+                                <label className="switch" form="txt">
+                                    <input type="checkbox"></input>
+                                    <span className="slider round"></span>
+                                </label>
+                                <div style={{ display: "inline-block", marginLeft: "15px" }}>Optiflow 光流计</div>
+                            </div>
+                            <div id="freqSetting">
+                                <label className="switch" form="txt">
+                                    <input type="checkbox"></input>
+                                    <span className="slider round"></span>
+                                </label>
+                                <div style={{ display: "inline-block", marginLeft: "15px" }}>AirMode </div>
+                            </div>
+                        </div>
+                        <div id="emptyInsert"></div>
+                    </div>
+
+                    <div id="SettingMainL">
+                        <div id="escType">
+                            <div style={{ marginTop: "-25px", marginLeft: "10px" }}>ESC/Motor function 电机/电调功能</div>
+                            <div id="escTypeSelectMain">
+                                <select name="escTypeSelect" id="escTypeSelect">
+                                    <option value="DShot150/300/600/1200">DShot150/300/600/1200</option>
+                                    <option value="ONESHOT125">ONESHOT125</option>
+                                    <option value="ONESHOT42">ONESHOT42</option>
+                                    <option value="PWM">PWM</option>
+                                    <option value="Others">其它</option>
+                                </select>
+                                <div style={{ display: "inline-block", marginLeft: "15px" }}>ESC protoco Selected 电调协议选择</div>
+                            </div>
+
+                            <div id="motorConfig">
+                                <label className="switch" form="txt">
+                                    <input type="checkbox"></input>
+                                    <span className="slider round"></span>
+                                </label>
+                                <div style={{ display: "inline-block", marginLeft: "15px" }}>MOTOR_STOP 解锁时不要转动电机</div>
+                            </div>
+
+                            <div id="motorIDLE">
+
+                            </div>
+                        </div>
+
+                        <div id="controllerFlip">
+                            <div style={{ marginTop: "-25px", marginLeft: "10px" }}>PID Settings</div>
+                            <div id="pSettings">
+                                <span> P Gain Settings P增益设置 </span>
+                                <input type="text" id="pset" value="1.5"></input>
+                            </div>
+                            <div id="pSettings">
+                                <span> I  Gain Settings I增益设置 </span>
+                                <input type="text" id="pset" value="0.8"></input>
+                            </div>
+                            <div id="pSettings">
+                                <span> D Gain Settings D增益设置 </span>
+                                <input type="text" id="pset" value="80"></input>
+                            </div>
+
+                            <div id="freqSetting">
+                                <label className="switch" form="txt">
+                                    <input type="checkbox"></input>
+                                    <span className="slider round"></span>
+                                </label>
+                                <div style={{ display: "inline-block", marginLeft: "15px" }}>Enable FFT Dynamic 启动快速傅里叶滤波器</div>
+                            </div>
+
+                            <div id="freqSetting">
+                                <label className="switch" form="txt">
+                                    <input type="checkbox"></input>
+                                    <span className="slider round"></span>
+                                </label>
+                                <div style={{ display: "inline-block", marginLeft: "15px" }}>Enable D-Gain Dynamic 启动动态D增益</div>
+                            </div>
+
+                            
+                            <div id="freqSetting">
+                                <label className="switch" form="txt">
+                                    <input type="checkbox"></input>
+                                    <span className="slider round"></span>
+                                </label>
+                                <div style={{ display: "inline-block", marginLeft: "15px" }}>Enable Kalman Filter 启动卡尔曼滤波器</div>
+                            </div>
+                        </div>
+                    </div>
                 </>
             )
         }
     }
-
     //=================================================================================================================================//
 
-    class Map extends React.Component {
-        //height为不安定要素，bug难以复现，须注意
+    interface MapProps {
+
+    }
+
+    interface MapState {
+        lat: Number;
+        lng: Number;
+    }
+
+    class Map extends React.Component<MapProps, MapState>{
         MainMap: MapShow;
+        Position: Array<Number> = new Array<Number>();
 
-        private MapMainCSS: React.CSSProperties = {
-            position: "absolute",
-            height: "-webkit-calc(100% - 6px)",
-            width: "-webkit-calc(100% - 380px)",
-            right: "0px",
-            border: "3px solid black"
-        };
-
-        private MapCSS: React.CSSProperties = {
-            height: "-webkit-calc(100% - 20px)",
-            width: "-webkit-calc(100% - 45px)",
-            top: "0",
-            left: "0"
-        };
-
-        private MapRightCSS: React.CSSProperties = {
-            position: "absolute",
-            width: "45px",
-            height: "-webkit-calc(100% - 20px)",
-            backgroundColor: "black",
-            right: "0",
-            top: "0",
-            zIndex: -1,
-        }
-
-        private MapBottomCSS: React.CSSProperties = {
-            width: "100%",
-            height: "20px",
-            bottom: "0px",
-            backgroundColor: "black",
+        constructor(props) {
+            super(props);
+            this.state = { lat: 0.0000000000, lng: 0.0000000000 };
         }
 
         public render() {
             return (
                 <>
-                    <div id="MapArea" style={this.MapMainCSS}>
-                        <div id="Map" style={this.MapCSS}></div><div id="MapRight" style={this.MapRightCSS}></div>
-                        <div id="MapBottom" style={this.MapBottomCSS}></div>
+                    <div id="MapArea">
+                        <div id="Map"></div>
+                        <div id="MapRight">
+                            <div id="con">
+                                <input type="range" min="0" max="100" step="5" />
+                            </div>
+                        </div>
+                        <div id="MapBottom">
+                            <div id="MapBottomTG" style={{ width: "100%", height: "100%" }}>
+                                <div id="lat"> Lat:{this.state.lat.toFixed(8)}</div>
+                                <div id="lng"> lng:{this.state.lng.toFixed(8)}</div>
+                                <div id="Altitude"> Altitude: 0.00m</div>
+                            </div>
+                        </div>
                     </div>
                 </>
             )
@@ -282,85 +439,59 @@ export module MainPageUI {
 
         componentDidMount() {
             this.MainMap = new MapShow("Map");
-        }
-    }
-
-    class SensorRTChart extends React.Component {
-        private GryoYaw: number;
-        private GryoRoll: number;
-        private GryoPitch: number;
-        private TimerID: NodeJS.Timeout;
-        private Gryochart: EchartShowSys;
-        private SensorRTChartCSS: React.CSSProperties = {
-            backgroundColor: "rgb(253, 253, 253)",
-            top: "43px",
-            height: "250px",
-            width: "50%"
-        };
-
-        public render() {
-            return (
-                <>
-                    <div id='SensorRTChart' style={this.SensorRTChartCSS}></div>
-                </>
-            );
-        }
-
-        componentDidMount() {
-            this.SensorRTChartInit();
-            window.onresize = () => this.Gryochart.EchartAreaUpdate();
-            this.TimerID = setInterval(() => {
-                this.Gryochart.EchartsDataAdd(Number(server.deviceRTDataBuffer[1][2]), this.GryoPitch);
-                this.Gryochart.EchartsDataAdd(Number(server.deviceRTDataBuffer[1][3]), this.GryoRoll);
-                this.Gryochart.EchartsDataAdd(Number(server.deviceRTDataBuffer[1][4]), this.GryoYaw);
-            }, 100);
+            this.MainMap.Map.addEventListener('move', () => {
+                this.Position = this.MainMap.getCurrentCenterPosition();
+                this.setState({ lat: this.Position[0], lng: this.Position[1] });
+            });
         }
 
         componentWillUnmount() {
-            window.onresize = null;
-            clearInterval(this.TimerID);
-        }
-
-        private SensorRTChartInit() {
-            this.Gryochart = new EchartShowSys(document.getElementById('SensorRTChart'), "Gryo", { ymax: 550, ymin: -550 });
-            this.GryoPitch = this.Gryochart.EhcartSeriesAdd({
-                name: 'Charts',
-                type: 'line',
-                showSymbol: false,
-                hoverAnimation: false,
-                data: new Array(30)
-            })
-            this.GryoRoll = this.Gryochart.EhcartSeriesAdd({
-                name: 'Charts',
-                type: 'line',
-                showSymbol: false,
-                hoverAnimation: false,
-                data: new Array(30)
-            })
-            this.GryoYaw = this.Gryochart.EhcartSeriesAdd({
-                name: 'Charts',
-                type: 'line',
-                showSymbol: false,
-                hoverAnimation: false,
-                data: new Array(30)
-            })
+            this.MainMap.Map.clearAllEventListeners();
         }
     }
 
-    class CVShowArea extends React.Component {
-        serverProcess: ps.ChildProcess;
+    interface VideoShowAreaProps {
+
+    }
+
+    interface VideoShowAreaState {
+        IMGSRC: any;
+        IsSRCErrored: boolean;
+    }
+
+    class VideoShowArea extends React.Component<VideoShowAreaProps, VideoShowAreaState> {
+        constructor(props) {
+            super(props);
+            this.MJPEGServerINIT();
+            this.state = {
+                IMGSRC: JSONConfig.renderMJPEGServerSRC,
+                IsSRCErrored: false
+            }
+            this.MJPEGServerOnError = this.MJPEGServerOnError.bind(this);
+        }
+
 
         public render() {
-            this.MJPEGServerINIT();
             return (
                 <>
-                    <img id="myImage" src={JSONConfig.renderMJPEGServerSRC}></img>
+                    <div id="VideoShowArea">
+                        <img id="VideoShow" onError={this.MJPEGServerOnError} src={this.state.IMGSRC}></img>
+                    </div>
                 </>
             );
         }
 
+        MJPEGServerOnError() {
+            if (!this.state.IsSRCErrored) {
+                this.setState({
+                    IMGSRC: NoSignal,
+                    IsSRCErrored: true
+                })
+            }
+        }
+
         MJPEGServerINIT() {
-            this.serverProcess = ps.exec(JSONConfig.renderMJPEGServerBinWin + " -f='192.168.137.240' -fp=10086 ", (error, stdout, stderr) => {
+            ps.exec(JSONConfig.renderMJPEGServerBinWin + " -t", (error, stdout, stderr) => {
                 if (error) {
                     console.log(`error: ${error.message}`);
                     return;
@@ -376,26 +507,305 @@ export module MainPageUI {
         componentWillUnmount() {
             //windows Only
             ps.spawn("taskkill", ["/F", "/IM", "ACCSSVideoServer.exe"]);
-            document.getElementById("myImage").setAttribute("src", "");
+            document.getElementById("VideoShow").setAttribute("src", "");
         }
     }
 
+    class RCControllerStick extends React.Component {
+        private JoyStickR: nipplejs.JoystickManager;
+        private JoyStickL: nipplejs.JoystickManager;
+        public render() {
+            return (
+                <>
+                    <div id="JoyStickL"></div>
+                    <div id="JoyStickR"></div>
+                </>
+            )
+        }
+
+        componentDidMount() {
+            this.JoyStickL = nipplejs.create({
+                zone: document.getElementById('JoyStickL'),
+                mode: 'static',
+                position: { left: '50%', top: '50%' },
+                color: 'blue'
+            })
+            this.JoyStickR = nipplejs.create({
+                zone: document.getElementById('JoyStickR'),
+                mode: 'static',
+                position: { left: '50%', top: '50%' },
+                color: 'red'
+            })
+        }
+    }
+
+    interface SensorRTChartProps {
+
+    }
+
+    interface SensorRTChartState {
+        DataUpdateFreq: number;
+        DataSource: string;
+        DataPitch: number;
+        DataRoll: number;
+        DataYaw: number;
+        DataAltitude: number;
+        DataClimbeRate: number;
+    }
+
+    class SensorRTChart extends React.Component<SensorRTChartProps, SensorRTChartState> {
+        private GryoYaw: number;
+        private GryoRoll: number;
+        private GryoPitch: number;
+        private AccelRoll: number;
+        private AccelPitch: number;
+        private RealPitch: number;
+        private RealRoll: number;
+        private ClimbeRate: number;
+        private ShowDevID: number = 0;
+        private DataUpdateTimer: NodeJS.Timeout;
+        private ChartResizeMon: ResizeObserver;
+        private GryoChart: EchartShowSys;
+        private AccelChart: EchartShowSys;
+        private RealChart: EchartShowSys;
+        private ClimbeRateChart: EchartShowSys;
+        private ShowAreaElement: JSX.Element;
+
+        private c: number = 0;
+        private tmp_Gyro_X: number = 0;
+        private tmp_Gyro_Y: number = 0;
+        private tmp_Gyro_Z: number = 0;
+
+        constructor(props) {
+            super(props);
+            this.HandleDataShowType = this.HandleDataShowType.bind(this);
+            this.state = { DataUpdateFreq: 200, DataSource: "Gryo", DataPitch: 0, DataRoll: 0, DataYaw: 0, DataAltitude: 0, DataClimbeRate: 0 }
+        }
+
+        public render() {
+            if (this.state.DataSource != "Altitude") {
+                this.ShowAreaElement = (
+                    <>
+                        <div style={{ position: "absolute", left: "5px", top: "50px", width: "175px", height: "20px" }}>
+                            <div style={{ position: "absolute", fontSize: "12px", textAlign: "center" }}> Pitch: </div>
+                            <div style={{ position: "absolute", right: "0", width: "100px", height: "20px", backgroundColor: "pink", borderRadius: "5px" }}>{this.state.DataPitch}</div>
+                        </div>
+                        <div style={{ position: "absolute", left: "5px", top: "85px", width: "175px", height: "20px" }}>
+                            <div style={{ position: "absolute", fontSize: "12px", textAlign: "center" }}> Roll : </div>
+                            <div style={{ position: "absolute", right: "0", width: "100px", height: "20px", backgroundColor: "pink", borderRadius: "5px" }}>{this.state.DataRoll}</div>
+                        </div>
+                        <div style={{ position: "absolute", left: "5px", top: "120px", width: "175px", height: "20px" }}>
+                            <div style={{ position: "absolute", fontSize: "12px", textAlign: "center" }}> Yaw  : </div>
+                            <div style={{ position: "absolute", right: "0", width: "100px", height: "20px", backgroundColor: "pink", borderRadius: "5px" }}>{this.state.DataYaw}</div>
+                        </div>
+                    </>
+                )
+            } else if (this.state.DataSource == "Altitude") {
+                this.ShowAreaElement = (
+                    <>
+                        <div style={{ position: "absolute", left: "5px", top: "50px", width: "175px", height: "20px" }}>
+                            <div style={{ position: "absolute", fontSize: "12px", textAlign: "center" }}> Altitude  : </div>
+                            <div style={{ position: "absolute", right: "0", width: "100px", height: "20px", backgroundColor: "pink", borderRadius: "5px" }}>{this.state.DataAltitude}</div>
+                        </div>
+                        <div style={{ position: "absolute", left: "5px", top: "85px", width: "175px", height: "20px" }}>
+                            <div style={{ position: "absolute", fontSize: "12px", textAlign: "center" }}> ClimbeRata: </div>
+                            <div style={{ position: "absolute", right: "0", width: "100px", height: "20px", backgroundColor: "pink", borderRadius: "5px" }}>{this.state.DataClimbeRate}</div>
+                        </div>
+                    </>
+                );
+            }
+            return (
+                <>
+                    <div id="SensorChartArea">
+                        <div id="SensorDataShow">
+                            <div id="SensorDataShowType" style={{ position: "absolute", top: "50px" }}>
+                                <div style={{ position: "absolute", left: "5px", top: "15px", width: "175px", height: "20px" }}>
+                                    <div style={{ position: "absolute", fontSize: "12px", textAlign: "center" }}>DataSource:</div>
+                                    <select name="ChartType" id="ChartType" style={{ position: "absolute", right: "0", width: "100px", height: "20px", borderRadius: "5px" }} onChange={this.HandleDataShowType}>
+                                        <option value="Gryo">Gryo</option>
+                                        <option value="Accel">Accel</option>
+                                        <option value="RealAngle">RealAngle</option>
+                                        <option value="Altitude">Altitude</option>
+                                    </select>
+                                </div>
+                                {this.ShowAreaElement}
+                            </div>
+                        </div>
+                        <div id='SensorRTChart'></div>
+                    </div>
+                </>
+            );
+        }
+
+        HandleDataShowType(event: React.ChangeEvent<HTMLSelectElement>) {
+            if (event.target.value == "Gryo") {
+                this.setState({ DataSource: event.target.value });
+            } else if (event.target.value == "Accel") {
+                this.setState({ DataSource: event.target.value });
+            } else if (event.target.value == "RealAngle") {
+                this.setState({ DataSource: event.target.value });
+            } else if (event.target.value == "Altitude") {
+                this.setState({ DataSource: event.target.value });
+            }
+        }
+
+        componentDidMount() {
+            this.SensorRTChartGryoInit();
+            this.SensorRTChartAccelInit();
+            this.SensorRTChartRealInit();
+            this.SensorRTChartClimbeRateInit();
+            this.DataUpdateTimer = setInterval(() => {
+                this.ShowDevID = deviceSelected;
+                if (this.state.DataSource == "Gryo") {
+                    this.GryoChart.EchartsDataAdd(this.tmp_Gyro_X, this.GryoPitch);
+                    this.GryoChart.EchartsDataAdd(this.tmp_Gyro_Y, this.GryoRoll);
+                    this.GryoChart.EchartsDataAdd(this.tmp_Gyro_Z, this.GryoYaw);
+                    // this.GryoChart.EchartsDataAdd(Number(server.deviceRTDataBuffer[this.ShowDevID][2]), this.GryoPitch);
+                    // this.GryoChart.EchartsDataAdd(Number(server.deviceRTDataBuffer[this.ShowDevID][3]), this.GryoRoll);
+                    // this.GryoChart.EchartsDataAdd(Number(server.deviceRTDataBuffer[this.ShowDevID][4]), this.GryoYaw);
+                    this.setState({
+                        DataYaw: Number(this.tmp_Gyro_X.toFixed()),
+                        DataRoll: Number(this.tmp_Gyro_Y.toFixed()),
+                        DataPitch: Number(this.tmp_Gyro_Z.toFixed())
+                    });
+                } else if (this.state.DataSource == "Accel") {
+                    this.AccelChart.EchartsDataAdd(Number(server.deviceRTDataBuffer[this.ShowDevID][5]), this.AccelPitch);
+                    this.AccelChart.EchartsDataAdd(Number(server.deviceRTDataBuffer[this.ShowDevID][6]), this.AccelRoll);
+                    this.setState({
+                        DataYaw: -1,
+                        DataRoll: Number(server.deviceRTDataBuffer[this.ShowDevID][6]),
+                        DataPitch: Number(server.deviceRTDataBuffer[this.ShowDevID][5]),
+                    });
+                } else if (this.state.DataSource == "RealAngle") {
+                    this.RealChart.EchartsDataAdd(Number(server.deviceRTDataBuffer[this.ShowDevID][7]), this.RealPitch);
+                    this.RealChart.EchartsDataAdd(Number(server.deviceRTDataBuffer[this.ShowDevID][8]), this.RealRoll);
+                    this.setState({
+                        DataYaw: -1,
+                        DataRoll: Number(server.deviceRTDataBuffer[this.ShowDevID][8]),
+                        DataPitch: Number(server.deviceRTDataBuffer[this.ShowDevID][7]),
+                    });
+                } else if (this.state.DataSource == "Altitude") {
+                    this.ClimbeRateChart.EchartsDataAdd(Number(server.deviceRTDataBuffer[this.ShowDevID][9]), this.ClimbeRate);
+                    this.setState({
+                        DataClimbeRate: Number(server.deviceRTDataBuffer[this.ShowDevID][9]),
+                        DataAltitude: Number(server.deviceRTDataBuffer[this.ShowDevID][10])
+                    })
+                }
+
+                this.c++;
+
+                this.tmp_Gyro_X = 500 * Math.sin(this.c);
+
+            }, this.state.DataUpdateFreq);
+            this.ChartResizeMon = new ResizeObserver(entries => {
+                this.GryoChart.EchartAreaUpdate();
+            })
+            this.ChartResizeMon.observe(document.getElementById("SensorChartArea"));
+        }
+
+        componentWillUnmount() {
+            clearInterval(this.DataUpdateTimer);
+            this.ChartResizeMon.unobserve(document.getElementById("SensorChartArea"));
+        }
+
+        private SensorRTChartGryoInit() {
+            this.GryoChart = new EchartShowSys(document.getElementById('SensorRTChart'), "Gryo", { ymax: 550, ymin: -550 });
+            this.GryoPitch = this.GryoChart.EhcartSeriesAdd({
+                name: 'Charts',
+                type: 'line',
+                showSymbol: false,
+                hoverAnimation: false,
+                data: new Array(30)
+            })
+            this.GryoRoll = this.GryoChart.EhcartSeriesAdd({
+                name: 'Charts',
+                type: 'line',
+                showSymbol: false,
+                hoverAnimation: false,
+                data: new Array(30)
+            })
+            this.GryoYaw = this.GryoChart.EhcartSeriesAdd({
+                name: 'Charts',
+                type: 'line',
+                showSymbol: false,
+                hoverAnimation: false,
+                data: new Array(30)
+            })
+        }
+
+        private SensorRTChartAccelInit() {
+            this.AccelChart = new EchartShowSys(document.getElementById('SensorRTChart'), "Accel", { ymax: 90, ymin: -90 });
+            this.AccelPitch = this.AccelChart.EhcartSeriesAdd({
+                name: 'Charts',
+                type: 'line',
+                showSymbol: false,
+                hoverAnimation: false,
+                data: new Array(30)
+            });
+            this.AccelRoll = this.AccelChart.EhcartSeriesAdd({
+                name: 'Charts',
+                type: 'line',
+                showSymbol: false,
+                hoverAnimation: false,
+                data: new Array(30)
+            });
+        }
+        private SensorRTChartRealInit() {
+            this.RealChart = new EchartShowSys(document.getElementById('SensorRTChart'), "RealAngle", { ymax: 90, ymin: -90 });
+            this.RealPitch = this.RealChart.EhcartSeriesAdd({
+                name: 'Charts',
+                type: 'line',
+                showSymbol: false,
+                hoverAnimation: false,
+                data: new Array(30)
+            });
+            this.RealRoll = this.RealChart.EhcartSeriesAdd({
+                name: 'Charts',
+                type: 'line',
+                showSymbol: false,
+                hoverAnimation: false,
+                data: new Array(30)
+            });
+        }
+
+        private SensorRTChartClimbeRateInit() {
+            this.ClimbeRateChart = new EchartShowSys(document.getElementById('SensorRTChart'), "ClimbeRate", { ymax: 100, ymin: -100 });
+            this.ClimbeRate = this.ClimbeRateChart.EhcartSeriesAdd({
+                name: 'Charts',
+                type: 'line',
+                showSymbol: false,
+                hoverAnimation: false,
+                data: new Array(30)
+            })
+        }
+    }
+
+
     class GLRTShow extends React.Component {
+        canvasElement: WebGLRenderingContext;
         private GLRTMainCSS: React.CSSProperties = {
             position: "absolute",
-            minWidth: "350px",
-            width: "350px",
-            height: "260px",
+            width: "323px",
+            height: "323px",
             top: "0",
-            left: "0"
+            left: "0",
+            backgroundColor: "pink"
         }
 
         public render() {
             return (
                 <>
-                    <div id="GLRT" style={this.GLRTMainCSS}></div>
+                    <div id="GLRT" style={this.GLRTMainCSS}>
+                        <canvas id="glCanvas" style={{ width: "322px", height: "322px" }}></canvas>
+                    </div>
                 </>
             );
+        }
+
+        componentDidMount() {
+            this.canvasElement = (document.getElementById("glCanvas") as HTMLCanvasElement).getContext("webgl");
+            this.canvasElement.clearColor(0.0, 0.0, 0.0, 1.0);
+            this.canvasElement.clear(this.canvasElement.COLOR_BUFFER_BIT);
         }
     }
 }

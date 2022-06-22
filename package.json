@@ -1,5 +1,5 @@
 {
-  "name": "accss",
+  "name": "毕业设计-一种地面站系统设计与实现 ACCSS",
   "version": "0.1.0",
   "description": "Autopilot console",
   "main": "/SRC/Script/Comped/main.js",
@@ -28,7 +28,6 @@
     "@types/react": "^16.9.34",
     "@types/react-dom": "^16.9.6",
     "css-loader": "^3.5.3",
-    "electron": "^8.2.5",
     "electron-rebuild": "^1.10.1",
     "electron-webpack": "^2.8.2",
     "file-loader": "^6.0.0",
@@ -39,6 +38,7 @@
   },
   "dependencies": {
     "echarts": "^4.7.0",
+    "electron": "^8.2.5",
     "font-awesome": "^4.7.0",
     "leaflet": "^1.6.0",
     "nipplejs": "^0.8.7",

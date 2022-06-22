@@ -1,0 +1,129 @@
+#SettingMainL {
+    display: inline-block;
+    margin-top:10px; 
+    margin-left: 5px;
+    height: -webkit-calc(100% - 10px);
+    width: -webkit-calc(50% - 10px);
+    vertical-align: top;
+}
+/*  */
+
+#controllerType {
+    display: inline-block;
+    margin-top:15px; 
+    margin-left: 15px;
+    border: 3px solid #916dd5;
+    border-top: 30px solid #916dd5;
+    border-radius: 10px;
+    height: -webkit-calc(50%);
+    width: -webkit-calc(100% - 20px);
+    /*  */
+    vertical-align: top;
+}
+
+#mixerIMG{
+    display: inline-block;
+    margin-top: 20px;
+    margin-left: 30px;
+    border: 1px solid #916dd5; 
+    width: -webkit-calc(30%);
+    height: 0;
+    padding-bottom:30%;
+}
+
+#mixerType {
+    display: inline-block;
+    margin-top: 30px;
+    margin-left: 30px;
+    border: 1px solid #916dd5; 
+    width: 30%;
+    height: 30px;
+    vertical-align: top;
+}
+/*  */
+
+#systemSettings{
+    display: inline-block;
+    margin-top:15px; 
+    margin-left:15px;
+    border: 3px solid #916dd5;
+    border-radius: 10px;
+    height: -webkit-calc(50%);
+    width: -webkit-calc(100% - 20px);
+    vertical-align: top;
+    border-top: 30px solid #916dd5;
+}
+
+#freqSetting {
+    margin-left: 15px;
+    margin-top: 15px;
+    height: 40px;
+    border-bottom: 1px solid #7761a0;
+}
+
+#freqSelect {
+    display: inline-block;
+    border: 1px solid #916dd5; 
+    width: 20%;
+    height: 20px;
+    vertical-align: top; 
+}
+
+/*  */
+
+#escType {
+    display: inline-block;
+    margin-top:15px; 
+    margin-left: 10px;
+    border: 3px solid #916dd5;
+    border-radius: 10px;
+    height: -webkit-calc(30%);
+    width: -webkit-calc(100% - 20px);
+    vertical-align: top;
+    border-top: 30px solid #916dd5;
+}
+
+#escTypeSelectMain{
+    margin-left: 15px;
+    margin-top: 15px;
+    height: 40px;
+    border-bottom: 1px solid #7761a0;
+}
+
+#escTypeSelect{
+    margin-top: 10px;
+    width: 25%;
+}
+
+#motorConfig {
+    margin-top: 15px;
+    margin-left: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #7761a0;
+}
+
+/*  */
+
+#controllerFlip{
+    display: inline-block;
+    margin-top:15px; 
+    margin-left: 10px;
+    border: 3px solid #916dd5;
+    border-radius: 10px;
+    height: -webkit-calc(50%);
+    width: -webkit-calc(100% - 20px); 
+    vertical-align: top;
+    border-top: 30px solid #916dd5;
+}
+
+#pSettings {
+    margin-top: 20px;
+    margin-left: 20px;
+}
+
+/*  */
+#emptyInsert{
+    display: inline-block;
+    height: -webkit-calc(50px);
+    width: -webkit-calc(100% - 20px);
+}

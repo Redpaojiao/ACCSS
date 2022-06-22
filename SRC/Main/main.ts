@@ -3,14 +3,16 @@ import * as ps from 'child_process'
 import { format as formatUrl } from 'url'
 import { app, BrowserWindow } from 'electron';
 const isDevelopment = process.env.NODE_ENV !== 'production'
+app.commandLine.appendSwitch('remote-debugging-port', '9225');
+app.commandLine.appendSwitch('userDataDir', 'true');
 function createWindow() {
     let win = new BrowserWindow({
         width: 955,
         height: 600,
         minWidth: 955,
         minHeight: 600,
-        autoHideMenuBar: false,
-        title: "Accss - Electron Autopilot controller",
+        autoHideMenuBar: true,
+        title: "Accss 地面站 - Electron Autopilot controller",
         webPreferences: {
             nodeIntegration: true
         }
